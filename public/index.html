@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bharat Legal AI — Multilingual Indian Law Assistant</title>
+    <meta name="description" content="AI-powered multilingual legal assistant for Indian laws. Ask questions about Constitution, IPC, CrPC, and more in Hindi, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, and English with voice support.">
+    <meta name="keywords" content="Indian law, legal assistant, Constitution, IPC, CrPC, multilingual, voice AI, Hindi, Telugu, Tamil">
+    <meta name="theme-color" content="#0a0a1a">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ─── Animated Background ──────────────────────────────────────────── -->
+    <div class="bg-aurora" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
+    </div>
+
+    <!-- ─── App Shell ────────────────────────────────────────────────────── -->
+    <div id="app" class="app-container">
+
+        <!-- ─── Sidebar ──────────────────────────────────────────────────── -->
+        <aside id="sidebar" class="sidebar" aria-label="Navigation and settings">
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 48 48" width="40" height="40" fill="none">
+                        <circle cx="24" cy="24" r="22" stroke="url(#brandGrad)" stroke-width="2.5" fill="none"/>
+                        <path d="M24 8 L24 40 M14 16 L34 16 M14 32 L34 32 M16 24 L32 24" stroke="url(#brandGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="24" r="4" fill="url(#brandGrad)"/>
+                        <defs>
+                            <linearGradient id="brandGrad" x1="0" y1="0" x2="48" y2="48">
+                                <stop offset="0%" stop-color="#FF9933"/>
+                                <stop offset="50%" stop-color="#FFFFFF"/>
+                                <stop offset="100%" stop-color="#138808"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Bharat Legal AI</h1>
+                    <span class="brand-tagline">भारतीय कानून सहायक</span>
+                </div>
+            </div>
+
+            <!-- Language Picker -->
+            <div class="sidebar-section">
+                <h2 class="section-title">🌐 Language / भाषा</h2>
+                <div id="language-grid" class="language-grid">
+                    <button class="lang-btn active" data-lang="en" id="lang-en">
+                        <span class="lang-native">English</span>
+                    </button>
+                    <button class="lang-btn" data-lang="hi" id="lang-hi">
+                        <span class="lang-native">हिन्दी</span>
+                    </button>
+                    <button class="lang-btn" data-lang="te" id="lang-te">
+                        <span class="lang-native">తెలుగు</span>
+                    </button>
+                    <button class="lang-btn" data-lang="ta" id="lang-ta">
+                        <span class="lang-native">தமிழ்</span>
+                    </button>
+                    <button class="lang-btn" data-lang="kn" id="lang-kn">
+                        <span class="lang-native">ಕನ್ನಡ</span>
+                    </button>
+                    <button class="lang-btn" data-lang="ml" id="lang-ml">
+                        <span class="lang-native">മലയാളം</span>
+                    </button>
+                    <button class="lang-btn" data-lang="bn" id="lang-bn">
+                        <span class="lang-native">বাংলা</span>
+                    </button>
+                    <button class="lang-btn" data-lang="mr" id="lang-mr">
+                        <span class="lang-native">मराठी</span>
+                    </button>
+                    <button class="lang-btn" data-lang="pa" id="lang-pa">
+                        <span class="lang-native">ਪੰਜਾਬੀ</span>
+                    </button>
+                    <button class="lang-btn" data-lang="gu" id="lang-gu">
+                        <span class="lang-native">ગુજરાતી</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Topic Chips -->
+            <div class="sidebar-section">
+                <h2 class="section-title">⚡ Quick Topics</h2>
+                <div id="topic-chips" class="topic-chips">
+                    <button class="chip" data-query="What are my fundamental rights under the Indian Constitution?">🏛️ Fundamental Rights</button>
+                    <button class="chip" data-query="How to file an FIR at a police station?">📋 File FIR</button>
+                    <button class="chip" data-query="What is the bail process in India?">⚖️ Bail Process</button>
+                    <button class="chip" data-query="What are the grounds for divorce in India?">💍 Divorce Laws</button>
+                    <button class="chip" data-query="What is Article 21 Right to Life?">📜 Article 21</button>
+                    <button class="chip" data-query="How to file a consumer complaint?">🛡️ Consumer Rights</button>
+                    <button class="chip" data-query="What is the Right to Information Act?">📢 RTI Act</button>
+                    <button class="chip" data-query="What are cyber crime laws in India?">💻 Cyber Laws</button>
+                    <button class="chip" data-query="What is Section 498A IPC about domestic violence?">🏠 Domestic Violence</button>
+                    <button class="chip" data-query="What are minimum wage laws in India?">💰 Labor Laws</button>
+                </div>
+            </div>
+
+            <!-- Emergency Helplines -->
+            <div class="sidebar-section emergency-section">
+                <h2 class="section-title">🚨 Emergency Helplines</h2>
+                <div class="helpline-list">
+                    <div class="helpline"><span class="helpline-icon">🚔</span><span>Police: <strong>100</strong></span></div>
+                    <div class="helpline"><span class="helpline-icon">🆘</span><span>Emergency: <strong>112</strong></span></div>
+                    <div class="helpline"><span class="helpline-icon">👩</span><span>Women: <strong>181</strong></span></div>
+                    <div class="helpline"><span class="helpline-icon">💻</span><span>Cyber Crime: <strong>1930</strong></span></div>
+                    <div class="helpline"><span class="helpline-icon">⚖️</span><span>Legal Aid: <a href="https://nalsa.gov.in" target="_blank" rel="noopener">nalsa.gov.in</a></span></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ─── Sidebar Overlay (mobile) ─────────────────────────────────── -->
+        <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+        <!-- ─── Main Chat Area ───────────────────────────────────────────── -->
+        <main class="main-area">
+            <!-- Header Bar -->
+            <header class="main-header">
+                <button id="menu-toggle" class="menu-toggle" aria-label="Toggle sidebar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-center">
+                    <span class="header-status" id="header-status">
+                        <span class="status-dot"></span>
+                        <span id="status-text">Ready</span>
+                    </span>
+                </div>
+                <div class="header-right">
+                    <select id="header-lang-select" class="header-lang-select" aria-label="Select language">
+                        <option value="en">EN</option>
+                        <option value="hi">हिं</option>
+                        <option value="te">తె</option>
+                        <option value="ta">த</option>
+                        <option value="kn">ಕ</option>
+                        <option value="ml">മ</option>
+                        <option value="bn">বা</option>
+                        <option value="mr">म</option>
+                        <option value="pa">ਪ</option>
+                        <option value="gu">ગુ</option>
+                    </select>
+                </div>
+            </header>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-messages" role="log" aria-live="polite">
+                <!-- Welcome Message -->
+                <div class="message bot-message welcome-message" id="welcome-msg">
+                    <div class="message-avatar bot-avatar">
+                        <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+                            <circle cx="16" cy="16" r="14" stroke="#FF9933" stroke-width="1.5"/>
+                            <circle cx="16" cy="16" r="3" fill="#FF9933"/>
+                            <path d="M16 6v20M8 10h16M8 22h16" stroke="#138808" stroke-width="1.2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <h2>🏛️ Welcome to Bharat Legal AI</h2>
+                            <p>I'm your multilingual AI legal assistant for <strong>Indian laws</strong>. I can help you understand:</p>
+                            <ul>
+                                <li>📜 Indian Constitution & Fundamental Rights</li>
+                                <li>⚖️ Criminal Law (IPC, CrPC)</li>
+                                <li>🏠 Family Law, Divorce, Domestic Violence</li>
+                                <li>💰 Labor Law, Consumer Rights, Cyber Law</li>
+                            </ul>
+                            <p>🎤 <strong>Speak or type</strong> your question in any of <strong>10 Indian languages</strong>!</p>
+                            <p class="disclaimer">⚠️ <em>This is for informational purposes only. Please consult a qualified lawyer for specific legal advice.</em></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <!-- Voice Recording Indicator -->
+                <div id="voice-indicator" class="voice-indicator hidden">
+                    <div class="voice-waves">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <span class="voice-label" id="voice-label">Listening...</span>
+                    <button id="voice-stop" class="voice-stop-btn" aria-label="Stop recording">✕</button>
+                </div>
+
+                <!-- Input Bar -->
+                <div class="input-bar" id="input-bar">
+                    <button id="mic-btn" class="mic-btn" aria-label="Voice input" title="Speak your question">
+                        <svg class="mic-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        <div class="mic-pulse"></div>
+                    </button>
+                    <textarea id="chat-input" class="chat-input" placeholder="Ask about Indian law... (e.g., What is Article 21?)" rows="1" maxlength="2000" aria-label="Type your legal question"></textarea>
+                    <button id="send-btn" class="send-btn" aria-label="Send message" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="input-hint">Press <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line · 🎤 Click mic for voice</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- ─── Audio Player (hidden) ────────────────────────────────────────── -->
+    <audio id="audio-player" preload="none"></audio>
+
+    <!-- ─── Scripts ──────────────────────────────────────────────────────── -->
+    <script src="app.js"></script>
+</body>
+</html>
