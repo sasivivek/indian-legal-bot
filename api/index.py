@@ -1,13 +1,14 @@
 """
-India's Legal Voice — FastAPI Application
-Main API server with endpoints for chat, TTS, translation, and health check.
-Designed for Vercel serverless deployment via Mangum adapter.
+Bharat Legal AI — FastAPI Application
+Main API server with endpoints for RAG chat, TTS, translation, and health check.
+Powered by Sentence-Transformers, ChromaDB Vector Store, and Google Gemini.
 """
 
 import os
 import sys
 import time
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,9 +22,9 @@ load_dotenv()
 
 # Create FastAPI app
 app = FastAPI(
-    title="India's Legal Voice API",
-    description="Multilingual AI-powered legal assistant for Indian laws",
-    version="2.0.0",
+    title="Bharat Legal AI API",
+    description="Multilingual AI-powered Indian legal assistant using Vector RAG and Gemini",
+    version="3.0.0",
 )
 
 # CORS middleware — allow frontend to call the API
@@ -42,9 +43,19 @@ class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000, description="User's legal question")
     language: str = Field(default="en", description="Language code (en, hi, te, ta, kn, ml, bn, mr, gu, pa)")
 
+class SourceItem(BaseModel):
+    title: str = ""
+    category: str = ""
+    subcategory: str = ""
+    article: Optional[str] = None
+    section: Optional[str] = None
+    act: Optional[str] = None
+    source: Optional[str] = None
+    similarity: Optional[float] = None
+
 class ChatResponse(BaseModel):
     response: str
-    sources: list
+    sources: List[Dict[str, Any]] = []
     language: str
     status: str
     query_english: str = ""
@@ -72,17 +83,17 @@ class TranslateResponse(BaseModel):
 
 # ─── Lazy-loaded services (avoid import cost on cold start) ───────────────────
 
-_ai_service = None
+_rag_pipeline = None
 _translation_service = None
 _tts_service = None
 
 
-def get_ai():
-    global _ai_service
-    if _ai_service is None:
-        from api.ai_service import get_ai_service
-        _ai_service = get_ai_service()
-    return _ai_service
+def get_rag():
+    global _rag_pipeline
+    if _rag_pipeline is None:
+        from api.rag_pipeline import get_rag_pipeline
+        _rag_pipeline = get_rag_pipeline()
+    return _rag_pipeline
 
 
 def get_translator():
@@ -106,48 +117,60 @@ def get_tts():
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Main chat endpoint. Accepts a legal question and returns an AI-generated response
-    with relevant legal sources. Supports multilingual queries.
+    Main RAG chat endpoint:
+    1. Translates non-English query to English
+    2. Performs semantic similarity search against ChromaDB vector store
+    3. Assembles prompt with retrieved legal context
+    4. Generates grounded answer via Gemini AI (or structured fallback)
+    5. Translates response to requested language
     """
     start_time = time.time()
 
     try:
         translator = get_translator()
-        ai_service = get_ai()
+        rag_pipeline = get_rag()
 
-        # Step 1: Translate query to English if needed
-        query_english = request.query
+        # Step 1: Translate query to English if needed for semantic retrieval
+        query_english = request.query.strip()
         if request.language != "en":
-            query_english = translator.translate_to_english(
-                request.query, source_lang=request.language
-            )
+            try:
+                query_english = translator.translate_to_english(
+                    request.query, source_lang=request.language
+                )
+            except Exception as te:
+                print(f"[API] Translation to English failed ({te}), using original query...")
+                query_english = request.query.strip()
 
-        # Step 2: Generate AI response (in English)
-        result = await ai_service.generate_response(query_english, request.language)
+        # Step 2: Execute Vector RAG Pipeline (Retrieve from ChromaDB + Generate with Gemini)
+        rag_output = await rag_pipeline.answer(query=query_english)
 
-        # Step 3: Translate response to target language if needed
-        response_text = result["response"]
-        if request.language != "en":
-            response_text = translator.translate_from_english(
-                response_text, target_lang=request.language
-            )
+        # Step 3: Translate response back to user's target language if needed
+        final_response_text = rag_output.response
+        if request.language != "en" and rag_output.status != "invalid_query":
+            try:
+                final_response_text = translator.translate_from_english(
+                    final_response_text, target_lang=request.language
+                )
+            except Exception as te:
+                print(f"[API] Translation from English failed ({te}), returning English text.")
 
         elapsed = time.time() - start_time
-        print(f"Chat response generated in {elapsed:.2f}s (status={result['status']})")
+        print(f"[API] Chat RAG completed in {elapsed:.2f}s (status={rag_output.status}, chunks={len(rag_output.sources)})")
 
         return ChatResponse(
-            response=response_text,
-            sources=result["sources"],
+            response=final_response_text,
+            sources=rag_output.sources,
             language=request.language,
-            status=result["status"],
+            status=rag_output.status,
             query_english=query_english,
         )
 
     except Exception as e:
-        print(f"Chat error: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+        print(f"[API] Chat error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while processing your legal query. Please try again."
+        )
 
 
 @app.post("/api/tts", response_model=TTSResponse)
@@ -167,7 +190,7 @@ async def text_to_speech(request: TTSRequest):
         )
 
     except Exception as e:
-        print(f"TTS error: {e}")
+        print(f"[API] TTS error: {e}")
         raise HTTPException(status_code=500, detail=f"TTS generation failed: {str(e)}")
 
 
@@ -192,26 +215,41 @@ async def translate(request: TranslateRequest):
         )
 
     except Exception as e:
-        print(f"Translation error: {e}")
+        print(f"[API] Translation error: {e}")
         raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
 
 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint returning status of all services."""
+    """
+    Health check endpoint returning diagnostic status of:
+    - FastAPI
+    - Gemini AI Configuration
+    - Sentence-Transformers Embedding Model
+    - ChromaDB Vector Store & Indexed Chunks Count
+    - Translation Service
+    - TTS Service
+    """
     from api.translation_service import TRANSLATOR_AVAILABLE
     from api.tts_service import GTTS_AVAILABLE
+    from api.embeddings import get_embedding_service
+    from api.vector_store import get_vector_store
+    from api.ai_service import get_ai_service
 
-    gemini_status = "available" if get_ai().model is not None else "unavailable (using fallback)"
+    embedding_info = get_embedding_service().get_model_info()
+    vector_stats = get_vector_store().get_collection_stats()
+    ai_status = get_ai_service().get_status()
 
     return {
         "status": "healthy",
-        "version": "2.0.0",
+        "version": "3.0.0",
+        "pipeline": "Vector_RAG_ChromaDB_Embeddings",
         "services": {
-            "ai_gemini": gemini_status,
+            "gemini_ai": ai_status,
+            "embedding_model": embedding_info,
+            "vector_store_chromadb": vector_stats,
             "translation": "available" if TRANSLATOR_AVAILABLE else "unavailable",
             "tts": "available" if GTTS_AVAILABLE else "unavailable",
-            "nlp_pipeline": "available",
         },
         "supported_languages": list(get_translator().get_supported_languages().keys()),
     }
@@ -225,7 +263,6 @@ async def get_languages():
 
 # ─── Static file serving (for local development) ─────────────────────────────
 
-# Serve the frontend files for local dev
 frontend_dir = Path(__file__).parent.parent / "public"
 if frontend_dir.exists():
     @app.get("/")
@@ -260,7 +297,7 @@ except ImportError:
 
 if __name__ == "__main__":
     import uvicorn
-    print("\n>>> Starting India's Legal Voice API Server...")
+    print("\n>>> Starting Bharat Legal AI (Vector RAG) Server...")
     print("    Frontend: http://localhost:8000/")
     print("    API Docs: http://localhost:8000/docs")
     print("    Health:   http://localhost:8000/api/health\n")

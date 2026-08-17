@@ -23,5 +23,9 @@ Thumbs.db
 # Vercel
 .vercel/
 
-# Gemini
+# Gemini & Testing
 .gemini/
+.pytest_cache/
+
+# Local Vector DB
+data/chroma/

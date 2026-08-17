@@ -280,11 +280,15 @@
             if (options.sources && options.sources.length > 0) {
                 const sourcesDiv = document.createElement('div');
                 sourcesDiv.className = 'message-sources';
+                const seenTitles = new Set();
                 options.sources.forEach(source => {
-                    if (source.title) {
+                    if (source.title && !seenTitles.has(source.title)) {
+                        seenTitles.add(source.title);
                         const tag = document.createElement('span');
                         tag.className = 'source-tag';
-                        tag.textContent = `📖 ${source.title}`;
+                        const catLabel = source.category ? ` [${source.category.toUpperCase()}]` : '';
+                        tag.textContent = `📖 ${source.title}${catLabel}`;
+                        tag.title = source.act ? `Act: ${source.act}` : source.title;
                         sourcesDiv.appendChild(tag);
                     }
                 });
